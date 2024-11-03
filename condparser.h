@@ -36,12 +36,9 @@
 
     You can define the following macros to customise the parser:
         - CONDPARSER_STRNCMP: The string comparison function to use. Default: strncmp
-        - CONDPARSER_ISALPHA: The function to check if a character is an alphabetic character. Default: isalpha
-        - CONDPARSER_ISALNUM: The function to check if a character is an alphanumeric character. Default: isalnum
-        - CONDPARSER_ISSPACE: The function to check if a character is a whitespace character. Default: isspace
         - CONDPARSER_ID_LENGTH: The maximum length of an identifier. Default: 32
 
-    string.h and ctype.h are only included if the above overrides are not defined.
+    string.h is only included if CONDPARSER_STRNCMP is not defined.
 
     LICENSE
     ==================================================
@@ -91,13 +88,6 @@ extern "C" {
 #define CONDPARSER_STRNCMP strncmp
 #endif
 
-#if !defined(CONDPARSER_ISALPHA) && !defined(CONDPARSER_ISALNUM) && !defined(CONDPARSER_ISSPACE)
-#include <ctype.h>
-#define CONDPARSER_ISALPHA isalpha
-#define CONDPARSER_ISALNUM isalnum
-#define CONDPARSER_ISSPACE isspace
-#endif
-
 #ifndef CONDPARSER_ID_LENGTH
 #define CONDPARSER_ID_LENGTH 32
 #endif
@@ -131,6 +121,21 @@ typedef struct
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+    static bool condParserIsSpace(char c)
+    {
+        return (c == ' ') || (c == '\t') || (c == '\n') || (c == '\v') || (c == '\f') || (c == '\r');
+    }
+
+    static bool condParserIsAlpha(char c)
+    {
+        return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
+    }
+
+    static bool condParserIsAlnum(char c)
+    {
+        return condParserIsAlpha(c) || (c >= '0' && c <= '9');
+    }
 
     static void condParserPrintError(const CondParserContext* ctx, const char* msg)
     {
@@ -176,7 +181,7 @@ extern "C" {
     static void condParserNextToken(CondParserContext* ctx)
     {
         // skip ws
-        while (CONDPARSER_ISSPACE(*ctx->cur)) ctx->cur++;
+        while (condParserIsSpace(*ctx->cur)) ctx->cur++;
 
         if (*ctx->cur == '\0') {
             ctx->curToken.type = CondParserToken_End;
@@ -201,10 +206,10 @@ extern "C" {
             ctx->curToken.type = CondParserToken_RParen;
             ctx->cur++;
         }
-        else if (CONDPARSER_ISALPHA(*ctx->cur)) {
+        else if (condParserIsAlpha(*ctx->cur)) {
             ctx->curToken.type = CondParserToken_ID;
             int i = 0;
-            while (CONDPARSER_ISALNUM(*ctx->cur) && i < (CONDPARSER_ID_LENGTH - 1)) {
+            while (condParserIsAlnum(*ctx->cur) && i < (CONDPARSER_ID_LENGTH - 1)) {
                 ctx->curToken.id[i++] = *ctx->cur++;
             }
             ctx->curToken.id[i] = '\0';
