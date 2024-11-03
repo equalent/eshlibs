@@ -32,8 +32,6 @@
     It takes a logical expression, a callback function to get the value of an identifier, and a callback function to output errors,
     and returns the result of the expression.
 
-    Optionally, you can define CONDPARSER_BUILD_TEST to build a test program.
-
     You can define the following macros to customise the parser:
         - CONDPARSER_STRNCMP: The string comparison function to use. Default: strncmp
         - CONDPARSER_ID_LENGTH: The maximum length of an identifier. Default: 32
@@ -324,85 +322,5 @@ extern "C" {
 #endif
 
 #endif // CONDPARSER_IMPLEMENTATION
-
-#ifdef CONDPARSER_BUILD_TEST
-
-#include <stdio.h>
-
-typedef struct
-{
-    const char* expr;
-    bool expected;
-} CondParserTest;
-
-bool condParserTestGetValue(const char* id)
-{
-    return strcmp(id, "true") == 0;
-}
-
-void condParserTestError(const char* msg)
-{
-    fprintf(stderr, "%s", msg);
-}
-
-int main(int argc, char** argv)
-{
-    const CondParserTest tests[] = {
-        { "true", true },
-        { "false", false },
-        { "true && true", true },
-        { "true && false", false },
-        { "false || true", true },
-        { "false || false", false },
-        { "!true", false },
-        { "!false", true },
-        { "true || false && false", true },           // Checks precedence of && over ||
-        { "true && true || false", true },            // Checks precedence of && over ||
-        { "false || true && false", false },          // Checks mixed precedence
-        { "!(true && false)", true },                 // Checks negation with parentheses
-        { "!true || false", false },                  // Checks precedence of ! and ||
-        { "!(false || true) && true", false },        // Checks negation with mixed operators
-        { "true && (false || true)", true },          // Tests parentheses around ||
-        { "(true || false) && false", false },        // Tests parentheses around ||
-        { "!(true && true) || (false && true)", false }, // Combination with negation and parentheses
-        { "!(false || false) && (true || false)", true }, // Negation and mixed operators
-        { "(!true || true) && (true || !false)", true },  // Multiple negations and operators
-        { "true || !(false && true)", true },         // Negation within && condParserition
-        { "(true || false) && !(true && false)", true }, // Tests with &&, ||, and !
-        { "!(true && true) || false", false },        // Outer negation and || with false
-        { "!((true || false) && (true && true))", false }, // Complex nested structure
-        { "!!true", true },                           // Double negation
-        { "!((true || false) && !(false || true))", true }  // Nested negations and operators
-    };
-
-    const int numTests = sizeof(tests) / sizeof(tests[0]);
-
-    bool success = true;
-
-    for (int i = 0; i < numTests; i++)
-    {
-        fprintf(stdout, "Testing: %s\n", tests[i].expr);
-
-        bool res = condParserEvaluate(tests[i].expr, condParserTestGetValue, condParserTestError);
-        if (res != tests[i].expected)
-        {
-            fprintf(stderr, "Test %d failed: %s\n", i, tests[i].expr);
-            success = false;
-        }
-    }
-
-    if (success)
-    {
-        puts("All tests passed!");
-    }
-    else
-    {
-        puts("Some tests failed!");
-    }
-
-    return success ? 0 : 1;
-}
-
-#endif // CONDPARSER_BUILD_TEST
 
 #endif // CONDPARSER_H_INCLUDED

@@ -1,0 +1,15 @@
+name: "Build & Test"
+
+on: [push, pull_request]
+
+jobs:
+    windows:
+        runs-on: windows-latest
+        steps:
+        - uses: actions/checkout@main
+        - name: test_win
+          run: |
+            cd tests
+            test_win.cmd
+          shell: cmd
+    

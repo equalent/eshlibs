@@ -1,0 +1,25 @@
+{
+    "version": 6,
+    "cmakeMinimumRequired": {
+        "major": 3,
+        "minor": 26,
+        "patch": 0
+    },
+    "configurePresets": [
+        {
+            "name": "win64-default",
+            "generator": "Visual Studio 17 2022",
+            "binaryDir": "${sourceDir}/build"
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "win64-default",
+            "configurePreset": "win64-default",
+            "configuration": "Release",
+            "targets": [
+                "functests"
+            ]
+        }
+    ]
+}
